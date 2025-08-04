@@ -1,0 +1,10 @@
+* {
+  all: unset;
+}
+title {
+  all: revert;  
+}
+body {
+  background-color: oklch(37.2% 0.044 257.287);
+  color: white
+}
