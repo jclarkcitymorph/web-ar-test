@@ -13,8 +13,7 @@
       AFRAME.registerComponent('videohandler', {
           init: function () {
               var marker = this.el;
-              // Fixed: changed from #vid to #ar-video to match HTML
-              this.vid = document.querySelector("#ar-video");
+              this.vid = document.querySelector("#hls-video");
 
               marker.addEventListener('markerFound', function () {
                   console.log('Marker found - playing video');
@@ -80,7 +79,7 @@
           rotation="-90 0 0" 
           width="4" 
           height="2.25" 
-          material="src: #ar-video; shader: flat;">
+          material="src: #hls-video; shader: flat;">
         </a-plane>
       </a-nft>
       <a-entity camera></a-entity>
