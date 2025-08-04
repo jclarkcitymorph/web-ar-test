@@ -3,31 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/web-ar-test/vite.svg" />
-    <link rel="stylesheet" href="style.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + TS</title>
+    <title>AR Video Player</title>
   </head>
   <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script src='https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js'></script>
   <script>
     window.onload = function() {
-        AFRAME.registerComponent('videohandler', {
-            init: function () {
-                var marker = this.el;
+      AFRAME.registerComponent('videohandler', {
+          init: function () {
+              var marker = this.el;
+              // Fixed: changed from #vid to #ar-video to match HTML
+              this.vid = document.querySelector("#ar-video");
 
-                this.vid = document.querySelector("#vid");
+              marker.addEventListener('markerFound', function () {
+                  console.log('Marker found - playing video');
+                  this.vid.play();
+              }.bind(this));
 
-                marker.addEventListener('markerFound', function () {
-                    this.vid.play();
-                }.bind(this));
-
-    marker.addEventListener('markerLost', function() {
-      this.vid.pause();
-      this.vid.currentTime = 0;
-    }.bind(this));
-            }
-        });
+              marker.addEventListener('markerLost', function() {
+                  console.log('Marker lost - pausing video');
+                  this.vid.pause();
+                  this.vid.currentTime = 0;
+              }.bind(this));
+          }
+      });
     };
   </script>
   <style>
@@ -49,7 +49,7 @@
       color: white;
     }
   </style>
-  <body style="margin : 0px; overflow: hidden;">
+  <body style="margin: 0px; overflow: hidden;">
     <a-scene
       vr-mode-ui="enabled: false;"
       renderer="logarithmicDepthBuffer: true;"
@@ -57,7 +57,14 @@
       arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false;"
     >
       <a-assets>
-        <video id="hls-video" preload="metadata" crossorigin="anonymous" muted="true" playsinline="true" volume="0"></video>
+        <video 
+          id="hls-video"
+          preload="metadata" 
+          crossorigin="anonymous" 
+          muted="true" 
+          playsinline="true" 
+          loop="true">
+        </video>
       </a-assets>
       <a-nft
         videohandler
@@ -68,9 +75,63 @@
         smoothTolerance="0.01"
         smoothThreshold="5"
       >
-        <a-plane width="4" height="2" material="src: #hls-video; shader: flat;"></a-plane>
+        <a-plane 
+          position="0 0 0" 
+          rotation="-90 0 0" 
+          width="4" 
+          height="2.25" 
+          material="src: #ar-video; shader: flat;">
+        </a-plane>
       </a-nft>
       <a-entity camera></a-entity>
     </a-scene>
-</body>
+  </body>
+  <script>
+    const video = document.querySelector('#hls-video');
+    video.volume = 0;
+    video.muted = true;
+    const hlsUrl = 'https://reel-em-in-hls-bucket.s3-us-west-1.amazonaws.com/bab4eed3-a93e-4dff-ae47-6a29195f2a23/playlist.m3u8';
+    function initializeHLS() {
+      if (Hls.isSupported()) {
+        const hls = new Hls({
+          debug: false,
+          enableWorker: true,
+          lowLatencyMode: true,
+          maxBufferLength: 30,
+          maxMaxBufferLength: 60,
+        });
+        
+        hls.loadSource(hlsUrl);
+        hls.attachMedia(video);
+        
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          console.log('HLS manifest loaded successfully');
+          loading.style.display = 'none';
+          
+          // Auto-play attempt (might be blocked by browser)
+          video.play().catch(e => {
+            console.log('Autoplay blocked, user interaction required');
+          });
+        });
+        
+        hls.on(Hls.Events.ERROR, (event, data) => {
+          console.error('HLS Error:', data);
+          loading.innerHTML = 'Error loading video. Check console for details.';
+        });
+        
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        // Safari native HLS support
+        video.src = hlsUrl;
+        video.addEventListener('loadedmetadata', () => {
+          loading.style.display = 'none';
+          video.play().catch(e => {
+            console.log('Autoplay blocked, user interaction required');
+          });
+        });
+      } else {
+        loading.innerHTML = 'HLS not supported in this browser';
+      }
+    }
+    window.addEventListener('load', initializeHLS);
+  </script>
 </html>
