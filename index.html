@@ -6,9 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AR Video Player</title>
   </head>
-  <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
-  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<!-- A-Frame core -->
+<script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+
+<!-- AR.js marker-based tracking -->
+<script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+
+<!-- HLS.js for video streaming -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
   <script>
     window.onload = function() {
       console.log({AFRAME: typeof AFRAME})
@@ -68,7 +74,7 @@
           loop="true">
         </video>
       </a-assets>
-      <a-marker videohandler type="pattern" patternUrl="./pattern-07.patt">
+      <a-marker videohandler type="pattern" patternUrl="./pattern-11.patt">
         <a-plane 
           position="0 0 0" 
           rotation="-90 0 0" 
