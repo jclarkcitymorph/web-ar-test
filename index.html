@@ -6,15 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AR Video Player</title>
   </head>
-<!-- A-Frame core -->
-<script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
-
-<!-- AR.js marker-based tracking -->
-<script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-
-<!-- HLS.js for video streaming -->
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-
+  <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+  <script src='https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js'></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script>
     window.onload = function() {
       console.log({AFRAME: typeof AFRAME})
@@ -57,14 +51,14 @@
     }
   </style>
   <body style="margin: 0px; overflow: hidden;">
-    <div class="arjs-loader" id="loading">
-      <div>Initializing AR...</div>
-    </div>
+  <div class="arjs-loader">
+    <div>Loading, please wait...</div>
+  </div>
     <a-scene
       vr-mode-ui="enabled: false;"
-      renderer="logarithmicDepthBuffer: true; precision: mediump; antialias: false;"
+      renderer="logarithmicDepthBuffer: true;"
       embedded
-      arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; cameraParametersUrl: https://raw.githack.com/AR-js-org/AR.js/master/data/data/camera_para.dat;"
+      arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: true;"
     >
       <a-assets>
         <video 
@@ -76,36 +70,40 @@
           loop="true">
         </video>
       </a-assets>
-      <a-marker videohandler preset="hiro">
+      <a-nft
+        videohandler
+        type="nft"
+        url="web-ar-test/citymorphbanner/citymorphbanner"
+        smooth="true"
+        smoothCount="20"
+        smoothTolerance="0.01"
+        smoothThreshold="2"
+      >
+        <a-box position="0 0 0" width="10" height="10" depth="10" color="red"></a-box>
         <a-plane 
-          position="0 0 0" 
+          position="125 -500 0.1" 
           rotation="-90 0 0" 
-          width="2" 
-          height="1" 
+          width="500" 
+          height="250" 
           material="src: #hls-video; shader: flat;">
         </a-plane>
-      </a-marker>
+      </a-nft>
       <a-entity camera></a-entity>
     </a-scene>
   </body>
   <script>
     const video = document.querySelector('#hls-video');
-    const loading = document.querySelector('#loading'); // Fixed: Define loading element
-    
     video.volume = 0;
     video.muted = true;
-    
     const hlsUrl = 'https://reel-em-in-hls-bucket.s3-us-west-1.amazonaws.com/bab4eed3-a93e-4dff-ae47-6a29195f2a23/playlist.m3u8';
-    
     function initializeHLS() {
       if (Hls.isSupported()) {
         const hls = new Hls({
           debug: false,
           enableWorker: true,
-          lowLatencyMode: false, // Changed to reduce memory usage
-          maxBufferLength: 10,   // Reduced buffer length
-          maxMaxBufferLength: 20, // Reduced max buffer length
-          maxBufferSize: 60 * 1000 * 1000, // 60MB buffer limit
+          lowLatencyMode: true,
+          maxBufferLength: 30,
+          maxMaxBufferLength: 60,
         });
         
         hls.loadSource(hlsUrl);
@@ -113,9 +111,7 @@
         
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           console.log('HLS manifest loaded successfully');
-          if (loading) {
-            loading.style.display = 'none';
-          }
+          loading.style.display = 'none';
           
           // Auto-play attempt (might be blocked by browser)
           video.play().catch(e => {
@@ -125,36 +121,22 @@
         
         hls.on(Hls.Events.ERROR, (event, data) => {
           console.error('HLS Error:', data);
-          if (loading) {
-            loading.innerHTML = '<div>Error loading video. Check console for details.</div>';
-          }
+          loading.innerHTML = 'Error loading video. Check console for details.';
         });
         
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         // Safari native HLS support
         video.src = hlsUrl;
         video.addEventListener('loadedmetadata', () => {
-          if (loading) {
-            loading.style.display = 'none';
-          }
+          loading.style.display = 'none';
           video.play().catch(e => {
             console.log('Autoplay blocked, user interaction required');
           });
         });
       } else {
-        if (loading) {
-          loading.innerHTML = '<div>HLS not supported in this browser</div>';
-        }
+        loading.innerHTML = 'HLS not supported in this browser';
       }
     }
-    
-    // Add click handler to handle autoplay restrictions
-    document.addEventListener('click', function() {
-      if (video.paused) {
-        video.play().catch(e => console.log('Manual play failed:', e));
-      }
-    });
-    
     window.addEventListener('load', initializeHLS);
   </script>
 </html>
